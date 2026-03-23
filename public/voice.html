@@ -1,0 +1,1156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NOVA Voice — AI Assistant</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #04080f;
+  --s1: #080f1a;
+  --s2: #0d1825;
+  --s3: #132030;
+  --tx: #e2eaf8;
+  --t2: #6b85a8;
+  --t3: #2e4160;
+  --a1: #4fc3f7;
+  --a2: #0288d1;
+  --a3: #b3e5fc;
+  --gn: #69f0ae;
+  --rd: #ff5370;
+  --am: #ffd740;
+  --pk: #f48fb1;
+  --b1: rgba(79,195,247,0.08);
+  --b2: rgba(79,195,247,0.15);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; }
+body {
+  background: var(--bg);
+  color: var(--tx);
+  font-family: 'DM Sans', sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+/* Deep space background */
+.stars {
+  position: fixed; inset: 0; z-index: 0;
+  background:
+    radial-gradient(ellipse at 20% 30%, rgba(2,136,209,0.12) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 70%, rgba(79,195,247,0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 50%, rgba(105,240,174,0.04) 0%, transparent 60%);
+}
+.stars::before {
+  content: '';
+  position: absolute; inset: 0;
+  background-image:
+    radial-gradient(1px 1px at 15% 20%, rgba(255,255,255,0.6) 0%, transparent 100%),
+    radial-gradient(1px 1px at 35% 45%, rgba(255,255,255,0.4) 0%, transparent 100%),
+    radial-gradient(1px 1px at 55% 15%, rgba(255,255,255,0.5) 0%, transparent 100%),
+    radial-gradient(1px 1px at 75% 60%, rgba(255,255,255,0.3) 0%, transparent 100%),
+    radial-gradient(1px 1px at 90% 30%, rgba(255,255,255,0.6) 0%, transparent 100%),
+    radial-gradient(1px 1px at 10% 75%, rgba(255,255,255,0.4) 0%, transparent 100%),
+    radial-gradient(1px 1px at 65% 85%, rgba(255,255,255,0.5) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 45% 70%, rgba(79,195,247,0.8) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 80% 10%, rgba(105,240,174,0.7) 0%, transparent 100%);
+}
+
+/* Main container */
+.container {
+  position: relative; z-index: 1;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  width: 100%; height: 100%;
+  padding: 24px;
+}
+
+/* Header */
+.hdr {
+  position: fixed; top: 0; left: 0; right: 0;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 28px;
+  background: rgba(4,8,15,0.8);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(79,195,247,0.08);
+  z-index: 10;
+}
+.hdr-brand { display: flex; align-items: center; gap: 10px; }
+.hdr-logo {
+  width: 32px; height: 32px; border-radius: 9px;
+  background: linear-gradient(135deg, #4fc3f7, #0288d1);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+  box-shadow: 0 0 16px rgba(79,195,247,0.4);
+}
+.hdr-name { font-size: 17px; font-weight: 700; color: var(--a3); }
+.hdr-tag {
+  font-size: 10px; font-family: 'DM Mono', monospace;
+  color: var(--a1); background: var(--b1);
+  border: 1px solid var(--b2); padding: 2px 8px;
+  border-radius: 20px; letter-spacing: 1px;
+}
+.hdr-right { display: flex; align-items: center; gap: 10px; }
+.key-input-wrap {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--s2); border: 1px solid rgba(79,195,247,0.15);
+  border-radius: 8px; padding: 5px 10px;
+}
+.key-input-wrap input {
+  background: none; border: none; outline: none;
+  color: var(--tx); font-family: 'DM Mono', monospace;
+  font-size: 11px; width: 220px;
+}
+.key-input-wrap input::placeholder { color: var(--t3); }
+.save-key-btn {
+  padding: 4px 12px; border-radius: 6px;
+  background: linear-gradient(135deg, #4fc3f7, #0288d1);
+  border: none; color: white;
+  font-size: 11px; font-weight: 600;
+  cursor: pointer; white-space: nowrap;
+}
+.mode-toggle {
+  display: flex; align-items: center; gap: 6px;
+  padding: 5px 14px; border-radius: 20px;
+  background: var(--s2); border: 1px solid rgba(79,195,247,0.15);
+  font-size: 12px; color: var(--t2); cursor: pointer;
+  transition: all 0.2s;
+}
+.mode-toggle:hover { border-color: var(--a1); color: var(--a1); }
+
+/* ── VOICE MODE ── */
+#voice-mode {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 32px; width: 100%;
+  animation: fadeIn 0.5s ease forwards;
+}
+@keyframes fadeIn { from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);} }
+
+/* Transcript display */
+.transcript-area {
+  text-align: center; max-width: 600px; width: 100%;
+  min-height: 80px;
+  display: flex; align-items: center; justify-content: center;
+}
+.transcript-text {
+  font-size: 22px; font-weight: 500; line-height: 1.5;
+  color: var(--tx); transition: all 0.3s;
+}
+.transcript-text.listening { color: var(--a1); }
+.transcript-text.speaking { color: var(--gn); }
+.transcript-text.idle { color: var(--t2); font-size: 16px; font-weight: 400; }
+.transcript-text.thinking {
+  color: var(--am); font-size: 16px;
+  animation: fadePulse 1.5s ease-in-out infinite;
+}
+@keyframes fadePulse { 0%,100%{opacity:1;} 50%{opacity:0.5;} }
+
+/* NOVA response */
+.response-area {
+  max-width: 640px; width: 100%;
+  min-height: 60px; text-align: center;
+}
+.response-text {
+  font-size: 16px; line-height: 1.8; color: var(--t2);
+  transition: all 0.4s;
+}
+.response-text.active { color: var(--tx); }
+
+/* ── THE ORB ── */
+.orb-wrap {
+  position: relative;
+  width: 220px; height: 220px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+}
+
+/* Outer pulse rings */
+.ring {
+  position: absolute; border-radius: 50%;
+  border: 1px solid rgba(79,195,247,0.2);
+  animation: ringPulse 3s ease-in-out infinite;
+}
+.ring:nth-child(1) { width: 220px; height: 220px; animation-delay: 0s; }
+.ring:nth-child(2) { width: 200px; height: 200px; animation-delay: 0.4s; }
+.ring:nth-child(3) { width: 180px; height: 180px; animation-delay: 0.8s; }
+@keyframes ringPulse { 0%,100%{opacity:0.3;transform:scale(1);}50%{opacity:0.6;transform:scale(1.03);} }
+
+.ring.listening { border-color: rgba(79,195,247,0.5); animation: ringListen 0.8s ease-in-out infinite; }
+@keyframes ringListen { 0%,100%{opacity:0.4;transform:scale(1);}50%{opacity:1;transform:scale(1.08);} }
+
+.ring.speaking { border-color: rgba(105,240,174,0.5); animation: ringSpeak 0.6s ease-in-out infinite; }
+@keyframes ringSpeak { 0%,100%{opacity:0.5;transform:scale(1);}50%{opacity:1;transform:scale(1.1);} }
+
+/* Sound wave bars (visible when listening) */
+.wave-bars {
+  position: absolute;
+  display: flex; align-items: center; gap: 4px;
+  opacity: 0; transition: opacity 0.3s;
+}
+.wave-bars.show { opacity: 1; }
+.bar {
+  width: 4px; background: var(--a1);
+  border-radius: 2px;
+  animation: barBounce 0.6s ease-in-out infinite;
+}
+.bar:nth-child(1){height:12px;animation-delay:0s;}
+.bar:nth-child(2){height:24px;animation-delay:0.1s;}
+.bar:nth-child(3){height:36px;animation-delay:0.2s;}
+.bar:nth-child(4){height:48px;animation-delay:0.1s;}
+.bar:nth-child(5){height:30px;animation-delay:0.15s;}
+.bar:nth-child(6){height:20px;animation-delay:0.05s;}
+.bar:nth-child(7){height:14px;animation-delay:0.2s;}
+@keyframes barBounce { 0%,100%{transform:scaleY(0.4);}50%{transform:scaleY(1);} }
+.bar.speaking { background: var(--gn); animation-duration: 0.4s; }
+
+/* Core orb */
+.orb-core {
+  position: relative; z-index: 2;
+  width: 130px; height: 130px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, rgba(79,195,247,0.9), rgba(2,136,209,0.6), rgba(1,60,110,0.8));
+  box-shadow:
+    0 0 40px rgba(79,195,247,0.35),
+    0 0 80px rgba(79,195,247,0.15),
+    inset 0 0 30px rgba(255,255,255,0.1);
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.4s cubic-bezier(0.34,1.56,0.64,1);
+}
+.orb-core:hover { transform: scale(1.05); box-shadow: 0 0 60px rgba(79,195,247,0.5), 0 0 100px rgba(79,195,247,0.2); }
+.orb-core.listening {
+  background: radial-gradient(circle at 35% 35%, rgba(79,195,247,1), rgba(2,136,209,0.8), rgba(1,60,110,0.9));
+  box-shadow: 0 0 60px rgba(79,195,247,0.6), 0 0 120px rgba(79,195,247,0.3), inset 0 0 40px rgba(255,255,255,0.15);
+  animation: orbListen 0.8s ease-in-out infinite;
+}
+@keyframes orbListen { 0%,100%{transform:scale(1);}50%{transform:scale(1.06);} }
+.orb-core.thinking {
+  background: radial-gradient(circle at 35% 35%, rgba(255,215,64,0.9), rgba(255,152,0,0.7), rgba(100,60,0,0.8));
+  box-shadow: 0 0 50px rgba(255,215,64,0.4), 0 0 90px rgba(255,152,0,0.2);
+  animation: orbThink 1.5s ease-in-out infinite;
+}
+@keyframes orbThink { 0%,100%{transform:scale(1) rotate(0deg);}50%{transform:scale(1.04) rotate(5deg);} }
+.orb-core.speaking {
+  background: radial-gradient(circle at 35% 35%, rgba(105,240,174,0.9), rgba(0,200,83,0.6), rgba(0,80,40,0.8));
+  box-shadow: 0 0 55px rgba(105,240,174,0.5), 0 0 100px rgba(105,240,174,0.2);
+  animation: orbSpeak 0.5s ease-in-out infinite;
+}
+@keyframes orbSpeak { 0%,100%{transform:scale(1);}50%{transform:scale(1.08);} }
+
+.orb-icon { font-size: 36px; transition: all 0.3s; user-select: none; }
+
+/* Orb label */
+.orb-label {
+  position: absolute; bottom: -28px;
+  font-size: 12px; font-family: 'DM Mono', monospace;
+  color: var(--t2); letter-spacing: 2px; text-transform: uppercase;
+  transition: all 0.3s; white-space: nowrap;
+}
+
+/* Controls */
+.controls {
+  display: flex; align-items: center; gap: 14px;
+}
+.ctrl-btn {
+  display: flex; align-items: center; gap: 7px;
+  padding: 10px 20px; border-radius: 24px;
+  font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: all 0.2s;
+  border: 1px solid;
+}
+.ctrl-btn.primary {
+  background: linear-gradient(135deg, #4fc3f7, #0288d1);
+  border-color: transparent; color: white;
+  box-shadow: 0 4px 20px rgba(79,195,247,0.3);
+}
+.ctrl-btn.primary:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(79,195,247,0.45); }
+.ctrl-btn.secondary {
+  background: var(--s2); border-color: rgba(79,195,247,0.2);
+  color: var(--t2);
+}
+.ctrl-btn.secondary:hover { border-color: var(--a1); color: var(--a1); }
+.ctrl-btn.danger {
+  background: rgba(255,83,112,0.1); border-color: rgba(255,83,112,0.3);
+  color: var(--rd);
+}
+.ctrl-btn.danger:hover { background: rgba(255,83,112,0.2); }
+.ctrl-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none !important; }
+
+/* Voice selector */
+.voice-sel {
+  background: var(--s2); border: 1px solid rgba(79,195,247,0.15);
+  border-radius: 8px; padding: 7px 12px;
+  color: var(--tx); font-family: 'DM Sans', sans-serif; font-size: 12px;
+  outline: none; cursor: pointer;
+}
+
+/* Status chips */
+.status-row {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 11px; font-family: 'DM Mono', monospace;
+}
+.status-chip {
+  display: flex; align-items: center; gap: 5px;
+  padding: 4px 12px; border-radius: 20px;
+  border: 1px solid;
+}
+.status-chip.online { border-color: rgba(105,240,174,0.3); color: var(--gn); background: rgba(105,240,174,0.07); }
+.status-chip.offline { border-color: rgba(255,83,112,0.3); color: var(--rd); background: rgba(255,83,112,0.07); }
+.status-chip.listening { border-color: rgba(79,195,247,0.4); color: var(--a1); background: rgba(79,195,247,0.1); }
+.status-chip.speaking { border-color: rgba(105,240,174,0.4); color: var(--gn); background: rgba(105,240,174,0.1); }
+.chip-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+.chip-dot.pulse { animation: fadePulse 1s ease-in-out infinite; }
+
+/* Conversation history (small) */
+.conv-history {
+  position: fixed; right: 24px; top: 80px; bottom: 24px;
+  width: 280px; overflow-y: auto;
+  display: flex; flex-direction: column; gap: 10px;
+  padding: 4px;
+}
+.conv-history::-webkit-scrollbar { width: 2px; }
+.conv-history::-webkit-scrollbar-thumb { background: var(--s3); }
+.conv-msg {
+  padding: 10px 13px; border-radius: 12px;
+  font-size: 12px; line-height: 1.6;
+  animation: fadeIn 0.3s ease forwards;
+}
+.conv-msg.user {
+  background: var(--s2); border: 1px solid rgba(79,195,247,0.12);
+  color: var(--t2); border-radius: 12px 12px 4px 12px;
+  align-self: flex-end; margin-left: 20px;
+}
+.conv-msg.bot {
+  background: rgba(79,195,247,0.06); border: 1px solid rgba(79,195,247,0.15);
+  color: var(--tx); border-radius: 4px 12px 12px 12px;
+  margin-right: 20px;
+}
+.conv-msg-role {
+  font-size: 9px; font-family: 'DM Mono', monospace;
+  letter-spacing: 1px; text-transform: uppercase;
+  margin-bottom: 4px; opacity: 0.6;
+}
+
+/* Settings panel */
+.settings-wrap {
+  position: fixed; left: 24px; top: 80px;
+  display: flex; flex-direction: column; gap: 10px;
+  width: 200px;
+}
+.setting-card {
+  background: rgba(8,15,26,0.8); backdrop-filter: blur(12px);
+  border: 1px solid rgba(79,195,247,0.1);
+  border-radius: 12px; padding: 13px;
+}
+.setting-title { font-size: 10px; font-family: 'DM Mono', monospace; color: var(--t2); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 9px; }
+.setting-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 7px; font-size: 12px; color: var(--t2); }
+.setting-row:last-child { margin-bottom: 0; }
+.toggle {
+  width: 32px; height: 18px; border-radius: 9px;
+  background: var(--s3); border: 1px solid rgba(79,195,247,0.2);
+  position: relative; cursor: pointer; transition: all 0.2s;
+}
+.toggle.on { background: rgba(79,195,247,0.3); border-color: var(--a1); }
+.toggle-thumb {
+  position: absolute; top: 2px; left: 2px;
+  width: 12px; height: 12px; border-radius: 50%;
+  background: var(--t3); transition: all 0.2s;
+}
+.toggle.on .toggle-thumb { left: 16px; background: var(--a1); }
+.lang-sel {
+  background: var(--s2); border: 1px solid rgba(79,195,247,0.15);
+  border-radius: 6px; padding: 4px 8px;
+  color: var(--tx); font-size: 11px; outline: none;
+}
+.gender-btn {
+  padding: 4px 9px; border-radius: 6px; font-size: 11px;
+  border: 1px solid rgba(79,195,247,0.15); color: var(--t2);
+  background: var(--s2); cursor: pointer; transition: all .15s;
+  font-family: 'DM Sans', sans-serif;
+}
+.gender-btn:hover { border-color: var(--a1); color: var(--a1); }
+.gender-btn.active { border-color: var(--a1); color: var(--a1); background: rgba(79,195,247,0.1); }
+
+/* ── TEXT MODE ── */
+#text-mode {
+  display: none;
+  flex-direction: column;
+  width: 100%; max-width: 720px; height: 100%;
+  padding-top: 70px;
+  animation: fadeIn 0.3s ease forwards;
+}
+#text-mode.show { display: flex; }
+.text-msgs {
+  flex: 1; overflow-y: auto; padding: 20px;
+  display: flex; flex-direction: column; gap: 14px;
+}
+.text-msgs::-webkit-scrollbar { width: 2px; }
+.text-msgs::-webkit-scrollbar-thumb { background: var(--s3); }
+.text-msg { display: flex; gap: 10px; align-items: flex-start; animation: fadeIn 0.3s ease forwards; }
+.text-msg.user { flex-direction: row-reverse; }
+.text-av { width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; }
+.text-msg.user .text-av { background: linear-gradient(135deg,#1a55cc,#0288d1); }
+.text-msg.bot .text-av { background: linear-gradient(135deg,#4fc3f7,#0288d1); box-shadow: 0 0 12px rgba(79,195,247,0.3); }
+.text-bubble { max-width: 78%; padding: 11px 15px; border-radius: 14px; font-size: 13px; line-height: 1.75; }
+.text-msg.user .text-bubble { background: linear-gradient(135deg,#1040cc,#0288d1); color: white; border-radius: 14px 14px 4px 14px; }
+.text-msg.bot .text-bubble { background: var(--s2); border: 1px solid rgba(79,195,247,0.13); color: var(--tx); border-radius: 4px 14px 14px 14px; }
+.text-input-row { display: flex; gap: 10px; padding: 14px 20px; border-top: 1px solid rgba(79,195,247,0.08); background: rgba(4,8,15,0.9); backdrop-filter: blur(20px); }
+.text-inp { flex: 1; background: var(--s2); border: 1px solid rgba(79,195,247,0.15); border-radius: 12px; padding: 10px 14px; color: var(--tx); font-family: 'DM Sans', sans-serif; font-size: 14px; outline: none; resize: none; max-height: 100px; line-height: 1.5; }
+.text-inp:focus { border-color: var(--a1); }
+.text-inp::placeholder { color: var(--t3); }
+.text-send { width: 40px; height: 40px; border-radius: 11px; background: linear-gradient(135deg,#4fc3f7,#0288d1); border: none; color: white; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; flex-shrink: 0; }
+.text-send:hover { transform: scale(1.08); box-shadow: 0 4px 16px rgba(79,195,247,0.4); }
+.text-send:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
+
+@media(max-width:900px) { .settings-wrap,.conv-history{display:none;} }
+@media(max-width:500px) { .hdr-right .key-input-wrap{display:none;} }
+</style>
+</head>
+<body>
+<div class="stars"></div>
+
+<!-- HEADER -->
+<header class="hdr">
+  <div class="hdr-brand">
+    <div class="hdr-logo">⚡</div>
+    <div class="hdr-name">NOVA Voice</div>
+    <div class="hdr-tag">LIVE AI</div>
+  </div>
+  <div class="hdr-right">
+    <div id="user-info" style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--t2);font-family:'DM Mono',monospace;"></div>
+    <button class="mode-toggle" onclick="toggleMode()">
+      <span id="mode-icon">💬</span>
+      <span id="mode-label">Text Mode</span>
+    </button>
+    <a href="/" style="display:flex;align-items:center;gap:5px;padding:6px 14px;border-radius:20px;background:var(--s2);border:1px solid rgba(79,195,247,0.15);color:var(--t2);font-size:12px;text-decoration:none;transition:all .2s" onmouseover="this.style.borderColor='var(--a1)';this.style.color='var(--a1)'" onmouseout="this.style.borderColor='rgba(79,195,247,0.15)';this.style.color='var(--t2)'">← Back to NOVA</a>
+  </div>
+</header>
+
+<!-- SETTINGS (left) -->
+<div class="settings-wrap">
+  <div class="setting-card">
+    <div class="setting-title">🌐 Language</div>
+    <select class="lang-sel" id="lang-sel" style="width:100%" onchange="onLangChange()">
+      <option value="en-IN">🇮🇳 English (India)</option>
+      <option value="en-US">🇺🇸 English (US)</option>
+      <option value="en-GB">🇬🇧 English (UK)</option>
+      <option value="en-AU">🇦🇺 English (AU)</option>
+      <option value="hi-IN">🇮🇳 Hindi</option>
+      <option value="mr-IN">🇮🇳 Marathi</option>
+      <option value="ta-IN">🇮🇳 Tamil</option>
+      <option value="te-IN">🇮🇳 Telugu</option>
+      <option value="bn-IN">🇮🇳 Bengali</option>
+      <option value="gu-IN">🇮🇳 Gujarati</option>
+      <option value="kn-IN">🇮🇳 Kannada</option>
+      <option value="ml-IN">🇮🇳 Malayalam</option>
+      <option value="pa-IN">🇮🇳 Punjabi</option>
+      <option value="ur-PK">🇵🇰 Urdu</option>
+      <option value="fr-FR">🇫🇷 French</option>
+      <option value="de-DE">🇩🇪 German</option>
+      <option value="es-ES">🇪🇸 Spanish</option>
+      <option value="it-IT">🇮🇹 Italian</option>
+      <option value="pt-BR">🇧🇷 Portuguese</option>
+      <option value="ja-JP">🇯🇵 Japanese</option>
+      <option value="ko-KR">🇰🇷 Korean</option>
+      <option value="zh-CN">🇨🇳 Chinese</option>
+      <option value="ar-SA">🇸🇦 Arabic</option>
+      <option value="ru-RU">🇷🇺 Russian</option>
+    </select>
+  </div>
+
+  <div class="setting-card">
+    <div class="setting-title">🎙️ Voice</div>
+    <div class="setting-row" style="margin-bottom:10px">
+      <span>Gender</span>
+      <div style="display:flex;gap:6px">
+        <button class="gender-btn active" id="gbtn-female" onclick="setGender('female')">👩 Female</button>
+        <button class="gender-btn" id="gbtn-male" onclick="setGender('male')">👨 Male</button>
+        <button class="gender-btn" id="gbtn-any" onclick="setGender('any')">🎭 Any</button>
+      </div>
+    </div>
+    <div class="setting-row" style="margin-bottom:10px;flex-direction:column;align-items:flex-start;gap:6px">
+      <span style="color:var(--t2);font-size:11px">Available Voices</span>
+      <select class="lang-sel" id="voice-sel" style="width:100%" onchange="onVoiceSelect()">
+        <option value="">Auto-select best voice</option>
+      </select>
+    </div>
+    <div class="setting-row">
+      <span>Speed</span>
+      <div style="display:flex;align-items:center;gap:6px">
+        <input type="range" min="0.5" max="2" step="0.1" value="1" id="speed-slider" style="width:70px;accent-color:var(--a1)" oninput="ttsRate=parseFloat(this.value);document.getElementById('speed-val').textContent=this.value+'x'">
+        <span id="speed-val" style="font-size:10px;color:var(--t3);font-family:'DM Mono',monospace;min-width:28px">1x</span>
+      </div>
+    </div>
+    <div class="setting-row">
+      <span>Pitch</span>
+      <div style="display:flex;align-items:center;gap:6px">
+        <input type="range" min="0.5" max="2" step="0.1" value="1.1" id="pitch-slider" style="width:70px;accent-color:var(--a1)" oninput="ttsPitch=parseFloat(this.value);document.getElementById('pitch-val').textContent=this.value">
+        <span id="pitch-val" style="font-size:10px;color:var(--t3);font-family:'DM Mono',monospace;min-width:28px">1.1</span>
+      </div>
+    </div>
+    <div class="setting-row" style="margin-top:4px">
+      <span>Auto-listen</span>
+      <div class="toggle on" id="toggle-auto" onclick="toggleSetting('auto')"><div class="toggle-thumb"></div></div>
+    </div>
+    <button onclick="testVoice()" style="width:100%;margin-top:10px;padding:7px;background:var(--b1);border:1px solid var(--b2);border-radius:8px;color:var(--a1);font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s" onmouseover="this.style.background='var(--b2)'" onmouseout="this.style.background='var(--b1)'">🔊 Test Voice</button>
+  </div>
+
+  <div class="setting-card">
+    <div class="setting-title">🤖 Model</div>
+    <select class="lang-sel" id="model-sel" style="width:100%">
+      <option value="llama-3.3-70b-versatile">LLaMA 3.3 70B</option>
+      <option value="llama-3.1-8b-instant">LLaMA 3.1 8B (fast)</option>
+      <option value="gemma2-9b-it">Gemma 2 9B</option>
+      <option value="mixtral-8x7b-32768">Mixtral 8x7B</option>
+    </select>
+  </div>
+</div>
+
+<!-- VOICE MODE -->
+<div class="container">
+  <div id="voice-mode">
+    <!-- What user said -->
+    <div class="transcript-area">
+      <div class="transcript-text idle" id="transcript">Tap the orb to start talking ✨</div>
+    </div>
+
+    <!-- THE ORB -->
+    <div class="orb-wrap" id="orb-wrap" onclick="handleOrbClick()">
+      <div class="ring" id="r1"></div>
+      <div class="ring" id="r2"></div>
+      <div class="ring" id="r3"></div>
+      <div class="wave-bars" id="wave-bars">
+        <div class="bar" id="b1"></div>
+        <div class="bar" id="b2"></div>
+        <div class="bar" id="b3"></div>
+        <div class="bar" id="b4"></div>
+        <div class="bar" id="b5"></div>
+        <div class="bar" id="b6"></div>
+        <div class="bar" id="b7"></div>
+      </div>
+      <div class="orb-core" id="orb-core">
+        <div class="orb-icon" id="orb-icon">⚡</div>
+      </div>
+      <div class="orb-label" id="orb-label">TAP TO SPEAK</div>
+    </div>
+
+    <!-- NOVA response -->
+    <div class="response-area">
+      <div class="response-text" id="response-text">I'm NOVA, your AI voice assistant. How can I help you today?</div>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls">
+      <button class="ctrl-btn primary" id="main-btn" onclick="handleOrbClick()">🎤 Start Listening</button>
+      <button class="ctrl-btn secondary" id="stop-btn" onclick="stopAll()" disabled>⏹ Stop</button>
+      <button class="ctrl-btn secondary" onclick="clearConv()">🗑 Clear</button>
+    </div>
+
+    <!-- Status -->
+    <div class="status-row">
+      <div class="status-chip online" id="status-chip">
+        <div class="chip-dot"></div>
+        <span id="status-text">Ready</span>
+      </div>
+      <div class="status-chip" id="model-chip" style="border-color:rgba(79,195,247,0.2);color:var(--t2)">
+        <span id="model-used">—</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- TEXT MODE -->
+  <div id="text-mode">
+    <div class="text-msgs" id="text-msgs">
+      <div class="text-msg bot">
+        <div class="text-av">⚡</div>
+        <div class="text-bubble">Hey! I'm NOVA. Type your message or switch to voice mode to talk with me 💕</div>
+      </div>
+    </div>
+    <div class="text-input-row">
+      <textarea class="text-inp" id="text-inp" placeholder="Type a message…" rows="1" onkeydown="textKey(event)" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,100)+'px'"></textarea>
+      <button class="text-send" id="text-send" onclick="sendText()">➤</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONVERSATION HISTORY (right) -->
+<div class="conv-history" id="conv-history"></div>
+
+<script>
+// ── State ─────────────────────────────────────────────────
+let apiKey = ''; // not needed - we use backend
+let authToken = localStorage.getItem('nova_token') || '';
+let currentUser = JSON.parse(localStorage.getItem('nova_user') || 'null');
+let state = 'idle'; // idle | listening | thinking | speaking
+let recognition = null;
+let synth = window.speechSynthesis;
+let convoHistory = []; // for context
+let ttsRate = 1.0;
+let ttsPitch = 1.1;
+let autoListen = true;
+let isVoiceMode = true;
+let textBusy = false;
+
+const SYSTEM_PROMPT = `You are NOVA, a friendly and helpful AI voice assistant. Keep responses concise (2-4 sentences) since they will be spoken aloud. Be warm and conversational. No markdown formatting, no bullet points — just natural spoken language. IMPORTANT: Always reply in the SAME language the user speaks to you in. If they speak Hindi, reply in Hindi. If Tamil, reply in Tamil. If English, reply in English. Match their language exactly.`;
+
+// ── Init ──────────────────────────────────────────────────
+window.onload = () => {
+  // Redirect to login if not authenticated
+  if (!authToken || !currentUser) {
+    window.location.href = '/';
+    return;
+  }
+  // Show user info
+  document.getElementById('user-info').textContent = `👤 ${currentUser.name}`;
+  checkSpeechSupport();
+  loadVoices();
+  setStatus('online', 'Ready');
+};
+
+function checkSpeechSupport() {
+  if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+    setTranscript('⚠️ Voice not supported. Use Chrome browser!', 'idle');
+    document.getElementById('main-btn').disabled = true;
+    document.getElementById('orb-wrap').style.cursor = 'default';
+  }
+}
+
+function loadVoices() {
+  const populate = () => {
+    const voices = synth.getVoices();
+    if (!voices.length) return;
+    rebuildVoiceList(voices);
+  };
+  populate();
+  if (synth.onvoiceschanged !== undefined) synth.onvoiceschanged = populate;
+  // Retry for browsers that load voices async
+  setTimeout(() => { if (!synth.getVoices().length) {} else rebuildVoiceList(synth.getVoices()); }, 500);
+  setTimeout(() => rebuildVoiceList(synth.getVoices()), 1500);
+}
+
+let selectedGender = 'female';
+let selectedVoiceName = '';
+let allVoices = [];
+
+function setGender(g) {
+  selectedGender = g;
+  document.querySelectorAll('.gender-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('gbtn-' + g).classList.add('active');
+  const lang = document.getElementById('lang-sel').value;
+  rebuildVoiceList(synth.getVoices(), lang);
+}
+
+function onLangChange() {
+  selectedVoiceName = '';
+  rebuildVoiceList(synth.getVoices());
+}
+
+function onVoiceSelect() {
+  selectedVoiceName = document.getElementById('voice-sel').value;
+}
+
+function rebuildVoiceList(voices, langOverride) {
+  allVoices = voices;
+  const lang = langOverride || document.getElementById('lang-sel')?.value || 'en-IN';
+  const langCode = lang.split('-')[0].toLowerCase();
+  const sel = document.getElementById('voice-sel');
+  if (!sel) return;
+
+  // Filter by language first, then gender
+  let filtered = voices.filter(v => v.lang.toLowerCase().startsWith(langCode));
+
+  // If no voices for that language, fall back to all voices
+  if (!filtered.length) filtered = voices;
+
+  // Sort: matching gender first
+  const femaleKeywords = /female|woman|girl|zira|salli|kendra|joanna|ivy|aria|natasha|tessa|moira|fiona|victoria|karen|samantha|allison|ava|susan|nicky|helen|linda|lisa|emily|alice|amelie|agnes|anna|lekha|heera|veena|raveena|priya|neerja|aditi/i;
+  const maleKeywords = /male|man|guy|david|mark|brian|matthew|joey|justin|eric|russell|lee|daniel|alex|george|jorge|paul|tom|reed|diego|luca|felix|jan|thomas/i;
+
+  filtered.sort((a, b) => {
+    const aFem = femaleKeywords.test(a.name);
+    const aMal = maleKeywords.test(a.name);
+    const bFem = femaleKeywords.test(b.name);
+    const bMal = maleKeywords.test(b.name);
+    if (selectedGender === 'female') { if (aFem && !bFem) return -1; if (!aFem && bFem) return 1; }
+    if (selectedGender === 'male')   { if (aMal && !bMal) return -1; if (!aMal && bMal) return 1; }
+    // Prefer local voices
+    if (a.localService && !b.localService) return -1;
+    if (!a.localService && b.localService) return 1;
+    return 0;
+  });
+
+  // Build options
+  sel.innerHTML = '<option value="">— Auto (best match) —</option>';
+  filtered.forEach(v => {
+    const isFem = femaleKeywords.test(v.name);
+    const isMal = maleKeywords.test(v.name);
+    const genderTag = isFem ? '👩' : isMal ? '👨' : '🎭';
+    const localTag = v.localService ? '⚡' : '☁️';
+    const opt = document.createElement('option');
+    opt.value = v.name;
+    opt.textContent = `${genderTag} ${localTag} ${v.name} (${v.lang})`;
+    if (v.name === selectedVoiceName) opt.selected = true;
+    sel.appendChild(opt);
+  });
+
+  // Also show all voices in a group
+  if (filtered.length < voices.length) {
+    const grp = document.createElement('optgroup');
+    grp.label = '── All Other Voices ──';
+    voices.filter(v => !filtered.includes(v)).forEach(v => {
+      const isFem = femaleKeywords.test(v.name);
+      const isMal = maleKeywords.test(v.name);
+      const genderTag = isFem ? '👩' : isMal ? '👨' : '🎭';
+      const opt = document.createElement('option');
+      opt.value = v.name;
+      opt.textContent = `${genderTag} ${v.name} (${v.lang})`;
+      if (v.name === selectedVoiceName) opt.selected = true;
+      grp.appendChild(opt);
+    });
+    sel.appendChild(grp);
+  }
+}
+
+function pickBestVoice(lang) {
+  const voices = synth.getVoices();
+  const langCode = lang.split('-')[0].toLowerCase();
+  const fullLang = lang.toLowerCase();
+
+  // If user manually selected a voice, use it
+  const manualName = document.getElementById('voice-sel')?.value;
+  if (manualName) {
+    const manual = voices.find(v => v.name === manualName);
+    if (manual) return manual;
+  }
+
+  const femaleKeywords = /female|woman|girl|zira|salli|kendra|joanna|ivy|aria|natasha|tessa|moira|fiona|victoria|karen|samantha|allison|ava|susan|nicky|helen|linda|lisa|emily|alice|amelie|agnes|anna|lekha|heera|veena|raveena|priya|neerja|aditi/i;
+  const maleKeywords = /male|man|guy|david|mark|brian|matthew|joey|justin|eric|russell|lee|daniel|alex|george|jorge|paul|tom|reed/i;
+
+  // Filter to matching language (exact first, then prefix)
+  let pool = voices.filter(v => v.lang.toLowerCase() === fullLang);
+  if (!pool.length) pool = voices.filter(v => v.lang.toLowerCase().startsWith(langCode));
+  if (!pool.length) pool = voices; // ultimate fallback
+
+  // Filter by gender preference
+  let genderPool = pool;
+  if (selectedGender === 'female') genderPool = pool.filter(v => femaleKeywords.test(v.name));
+  else if (selectedGender === 'male') genderPool = pool.filter(v => maleKeywords.test(v.name));
+  if (!genderPool.length) genderPool = pool; // fallback if no gender match
+
+  // Prefer local/offline voices
+  const local = genderPool.filter(v => v.localService);
+  return local.length ? local[0] : genderPool[0];
+}
+
+function testVoice() {
+  synth.cancel();
+  const lang = document.getElementById('lang-sel').value;
+  const testPhrases = {
+    'en': "Hello! I'm NOVA, your AI assistant. How are you today?",
+    'hi': "नमस्ते! मैं NOVA हूँ, आपकी AI सहायक।",
+    'mr': "नमस्कार! मी NOVA आहे, तुमची AI सहाय्यक.",
+    'ta': "வணக்கம்! நான் NOVA, உங்கள் AI உதவியாளர்.",
+    'te': "నమస్కారం! నేను NOVA, మీ AI సహాయకురాలు.",
+    'bn': "নমস্কার! আমি NOVA, আপনার AI সহকারী।",
+    'gu': "નમસ્તે! હું NOVA છું, તમારી AI સહાયક.",
+    'kn': "ನಮಸ್ಕಾರ! ನಾನು NOVA, ನಿಮ್ಮ AI ಸಹಾಯಕ.",
+    'ml': "നമസ്കാരം! ഞാൻ NOVA ആണ്, നിങ്ങളുടെ AI സഹായി.",
+    'pa': "ਸਤਿ ਸ੍ਰੀ ਅਕਾਲ! ਮੈਂ NOVA ਹਾਂ, ਤੁਹਾਡੀ AI ਸਹਾਇਕ।",
+    'ur': "السلام علیکم! میں NOVA ہوں، آپ کی AI معاون۔",
+    'fr': "Bonjour! Je suis NOVA, votre assistante IA.",
+    'de': "Hallo! Ich bin NOVA, Ihre KI-Assistentin.",
+    'es': "¡Hola! Soy NOVA, tu asistente de IA.",
+    'it': "Ciao! Sono NOVA, la tua assistente AI.",
+    'pt': "Olá! Sou NOVA, sua assistente de IA.",
+    'ja': "こんにちは！私はNOVA、あなたのAIアシスタントです。",
+    'ko': "안녕하세요! 저는 NOVA, 당신의 AI 어시스턴트입니다.",
+    'zh': "你好！我是NOVA，您的AI助手。",
+    'ar': "مرحباً! أنا NOVA، مساعدتك الذكاء الاصطناعي.",
+    'ru': "Привет! Я NOVA, ваш ИИ-помощник.",
+  };
+  const code = lang.split('-')[0];
+  const phrase = testPhrases[code] || testPhrases['en'];
+  const utt = new SpeechSynthesisUtterance(phrase);
+  utt.rate = ttsRate; utt.pitch = ttsPitch; utt.volume = 1;
+  utt.lang = lang;
+  const voice = pickBestVoice(lang);
+  if (voice) utt.voice = voice;
+  synth.speak(utt);
+  setStatus('online', `Testing: ${voice?.name || 'default'}`);
+  setTimeout(() => setStatus('online', 'Ready'), 3000);
+}
+
+// ── Mode toggle ────────────────────────────────────────────
+function toggleMode() {
+  isVoiceMode = !isVoiceMode;
+  stopAll();
+  document.getElementById('voice-mode').style.display = isVoiceMode ? 'flex' : 'none';
+  document.getElementById('text-mode').classList.toggle('show', !isVoiceMode);
+  document.getElementById('mode-icon').textContent = isVoiceMode ? '💬' : '🎤';
+  document.getElementById('mode-label').textContent = isVoiceMode ? 'Text Mode' : 'Voice Mode';
+}
+
+// ── UI setters ────────────────────────────────────────────
+function setOrbState(s) {
+  state = s;
+  const core = document.getElementById('orb-core');
+  const icon = document.getElementById('orb-icon');
+  const label = document.getElementById('orb-label');
+  const bars = document.getElementById('wave-bars');
+  const rings = [document.getElementById('r1'), document.getElementById('r2'), document.getElementById('r3')];
+  const barEls = document.querySelectorAll('.bar');
+
+  // Reset classes
+  core.className = 'orb-core';
+  rings.forEach(r => r.className = 'ring');
+  bars.className = 'wave-bars';
+  barEls.forEach(b => b.className = 'bar');
+
+  if (s === 'listening') {
+    core.classList.add('listening');
+    rings.forEach(r => r.classList.add('listening'));
+    bars.classList.add('show');
+    icon.textContent = '👂';
+    label.textContent = 'LISTENING…';
+    label.style.color = 'var(--a1)';
+  } else if (s === 'thinking') {
+    core.classList.add('thinking');
+    icon.textContent = '💭';
+    label.textContent = 'THINKING…';
+    label.style.color = 'var(--am)';
+  } else if (s === 'speaking') {
+    core.classList.add('speaking');
+    rings.forEach(r => r.classList.add('speaking'));
+    bars.classList.add('show');
+    barEls.forEach(b => b.classList.add('speaking'));
+    icon.textContent = '🗣️';
+    label.textContent = 'SPEAKING…';
+    label.style.color = 'var(--gn)';
+  } else {
+    icon.textContent = '⚡';
+    label.textContent = 'TAP TO SPEAK';
+    label.style.color = 'var(--t2)';
+  }
+}
+
+function setTranscript(text, type='idle') {
+  const el = document.getElementById('transcript');
+  el.textContent = text;
+  el.className = `transcript-text ${type}`;
+}
+
+function setResponse(text) {
+  const el = document.getElementById('response-text');
+  el.textContent = text;
+  el.classList.toggle('active', !!text);
+}
+
+function setStatus(type, text) {
+  const chip = document.getElementById('status-chip');
+  const span = document.getElementById('status-text');
+  chip.className = `status-chip ${type}`;
+  const dot = chip.querySelector('.chip-dot');
+  if (dot) dot.classList.toggle('pulse', type === 'listening' || type === 'speaking');
+  span.textContent = text;
+}
+
+function toggleSetting(key) {
+  if (key === 'auto') {
+    autoListen = !autoListen;
+    document.getElementById('toggle-auto').classList.toggle('on', autoListen);
+  }
+}
+
+// ── Main orb click ─────────────────────────────────────────
+function handleOrbClick() {
+  if (!authToken) { window.location.href='/'; return; }
+  if (state === 'listening') { stopListening(); return; }
+  if (state === 'speaking') { stopSpeaking(); return; }
+  if (state === 'thinking') return;
+  startListening();
+}
+
+// ── Speech Recognition ─────────────────────────────────────
+function startListening() {
+  if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) return;
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  recognition = new SR();
+  recognition.lang = document.getElementById('lang-sel').value;
+  recognition.continuous = false;
+  recognition.interimResults = true;
+
+  recognition.onstart = () => {
+    setOrbState('listening');
+    setTranscript('Listening…', 'listening');
+    setStatus('listening', 'Listening');
+    document.getElementById('main-btn').textContent = '⏹ Stop';
+    document.getElementById('stop-btn').disabled = false;
+  };
+
+  recognition.onresult = e => {
+    const interim = Array.from(e.results).map(r => r[0].transcript).join('');
+    setTranscript(interim, 'listening');
+    if (e.results[e.results.length-1].isFinal) {
+      const final = e.results[e.results.length-1][0].transcript.trim();
+      if (final) processUserInput(final);
+    }
+  };
+
+  recognition.onerror = e => {
+    if (e.error === 'no-speech') {
+      setTranscript('No speech detected. Tap to try again.', 'idle');
+    } else {
+      setTranscript(`Error: ${e.error}`, 'idle');
+    }
+    setOrbState('idle');
+    setStatus('online', 'Ready');
+    resetButtons();
+  };
+
+  recognition.onend = () => {
+    if (state === 'listening') {
+      setOrbState('idle');
+      setStatus('online', 'Ready');
+      resetButtons();
+    }
+  };
+
+  recognition.start();
+}
+
+function stopListening() {
+  recognition?.stop();
+  setOrbState('idle');
+  setStatus('online', 'Ready');
+  resetButtons();
+}
+
+// ── Process input & get AI response ───────────────────────
+async function processUserInput(text) {
+  recognition?.stop();
+  setOrbState('thinking');
+  setTranscript(`You: "${text}"`, 'listening');
+  setStatus('thinking', 'Thinking…');
+  setResponse('');
+  addToHistory('user', text);
+
+  document.getElementById('main-btn').disabled = true;
+
+  try {
+    const messages = [
+      ...convoHistory.slice(-10),
+      { role: 'user', content: text }
+    ];
+
+    const model = document.getElementById('model-sel').value;
+    const resp = await fetch('/api/chat/message', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+      body: JSON.stringify({
+        messages: [...convoHistory.slice(-10), { role: 'user', content: text }],
+        preferredModel: model
+      })
+    });
+
+    if (!resp.ok) {
+      const err = await resp.json();
+      throw new Error(err.error || `HTTP ${resp.status}`);
+    }
+
+    const data = await resp.json();
+    const reply = data.reply?.trim();
+    if (!reply) throw new Error('Empty response');
+
+    convoHistory.push({ role: 'user', content: text });
+    convoHistory.push({ role: 'assistant', content: reply });
+    if (convoHistory.length > 20) convoHistory = convoHistory.slice(-20);
+
+    document.getElementById('model-used').textContent = model.split('-').slice(0,3).join('-');
+    addToHistory('bot', reply);
+    speakResponse(reply);
+
+  } catch(e) {
+    let msg = e.message;
+    if (msg.includes('401')) msg = 'Invalid API key. Please check your Groq key.';
+    if (msg.includes('429')) msg = 'Rate limit hit. Please wait a moment.';
+    setOrbState('idle');
+    setTranscript('⚠️ ' + msg, 'idle');
+    setResponse('');
+    setStatus('online', 'Error');
+    document.getElementById('main-btn').disabled = false;
+    resetButtons();
+  }
+}
+
+// ── Text-to-Speech ─────────────────────────────────────────
+function speakResponse(text) {
+  synth.cancel();
+  setOrbState('speaking');
+  setResponse(text);
+  setStatus('speaking', 'Speaking');
+
+  // Clean text for speech
+  const clean = text.replace(/[*`#_~]/g,'').replace(/\n+/g,' ').trim();
+
+  const lang = document.getElementById('lang-sel').value;
+  const utt = new SpeechSynthesisUtterance(clean);
+  utt.rate = ttsRate;
+  utt.pitch = ttsPitch;
+  utt.volume = 1;
+  utt.lang = lang;
+
+  const voice = pickBestVoice(lang);
+  if (voice) {
+    utt.voice = voice;
+    document.getElementById('model-used').textContent = voice.name.split(' ').slice(0,2).join(' ');
+  }
+
+  utt.onstart = () => {
+    document.querySelectorAll('.bar').forEach(b => b.classList.add('speaking'));
+  };
+
+  utt.onend = () => {
+    setOrbState('idle');
+    setStatus('online', 'Ready');
+    resetButtons();
+    document.querySelectorAll('.bar').forEach(b => b.classList.remove('speaking'));
+    if (autoListen) setTimeout(startListening, 700);
+  };
+
+  utt.onerror = (e) => {
+    console.warn('TTS error:', e);
+    setOrbState('idle');
+    setStatus('online', 'Ready');
+    resetButtons();
+    document.querySelectorAll('.bar').forEach(b => b.classList.remove('speaking'));
+    if (autoListen) setTimeout(startListening, 700);
+  };
+
+  // Workaround for Chrome TTS cutting off long utterances
+  const chunkSize = 180;
+  if (clean.length > chunkSize) {
+    const sentences = clean.match(/[^.!?]+[.!?]*/g) || [clean];
+    let i = 0;
+    const speakNext = () => {
+      if (i >= sentences.length) {
+        setOrbState('idle'); setStatus('online','Ready'); resetButtons();
+        document.querySelectorAll('.bar').forEach(b=>b.classList.remove('speaking'));
+        if (autoListen) setTimeout(startListening, 700);
+        return;
+      }
+      const chunk = new SpeechSynthesisUtterance(sentences[i].trim());
+      chunk.rate = ttsRate; chunk.pitch = ttsPitch; chunk.volume = 1; chunk.lang = lang;
+      if (voice) chunk.voice = voice;
+      chunk.onend = () => { i++; speakNext(); };
+      chunk.onerror = () => { i++; speakNext(); };
+      synth.speak(chunk);
+      i++;
+    };
+    speakNext();
+    return;
+  }
+
+  synth.speak(utt);
+}
+
+function stopSpeaking() {
+  synth.cancel();
+  setOrbState('idle');
+  setStatus('online', 'Ready');
+  resetButtons();
+}
+
+function stopAll() {
+  recognition?.stop();
+  synth.cancel();
+  setOrbState('idle');
+  setStatus('online', 'Ready');
+  resetButtons();
+}
+
+function resetButtons() {
+  document.getElementById('main-btn').textContent = '🎤 Start Listening';
+  document.getElementById('main-btn').disabled = false;
+  document.getElementById('stop-btn').disabled = true;
+}
+
+// ── History ───────────────────────────────────────────────
+function addToHistory(role, text) {
+  const hist = document.getElementById('conv-history');
+  const d = document.createElement('div');
+  d.className = `conv-msg ${role}`;
+  d.innerHTML = `<div class="conv-msg-role">${role === 'user' ? '👤 You' : '⚡ Nova'}</div>${escHtml(text.slice(0,200))}${text.length>200?'…':''}`;
+  hist.appendChild(d);
+  hist.scrollTop = hist.scrollHeight;
+}
+
+function clearConv() {
+  convoHistory = [];
+  document.getElementById('conv-history').innerHTML = '';
+  setTranscript('Tap the orb to start talking ✨', 'idle');
+  setResponse('I\'m NOVA, your AI voice assistant. How can I help you today?');
+}
+
+// ── Text mode ─────────────────────────────────────────────
+function textKey(e) { if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendText();} }
+
+async function sendText() {
+  const inp = document.getElementById('text-inp');
+  const text = inp.value.trim();
+  if (!text || textBusy) return;
+  if (!authToken) { window.location.href='/'; return; }
+  inp.value = ''; inp.style.height = 'auto';
+  textBusy = true; document.getElementById('text-send').disabled = true;
+
+  const msgs = document.getElementById('text-msgs');
+  const ud = document.createElement('div');
+  ud.className = 'text-msg user';
+  ud.innerHTML = `<div class="text-av">👤</div><div class="text-bubble">${escHtml(text)}</div>`;
+  msgs.appendChild(ud);
+
+  const td = document.createElement('div');
+  td.className = 'text-msg bot';
+  td.innerHTML = `<div class="text-av">⚡</div><div class="text-bubble" style="color:var(--t2)">Thinking…</div>`;
+  msgs.appendChild(td);
+  msgs.scrollTop = msgs.scrollHeight;
+
+  try {
+    convoHistory.push({ role: 'user', content: text });
+    const model = document.getElementById('model-sel').value;
+    const resp = await fetch('/api/chat/message', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+      body: JSON.stringify({
+        messages: convoHistory.slice(-16),
+        preferredModel: model
+      })
+    });
+    const data = await resp.json();
+    const reply = data.reply || 'Sorry, no response.';
+    convoHistory.push({ role: 'assistant', content: reply });
+    td.querySelector('.text-bubble').innerHTML = fmtText(reply);
+    td.querySelector('.text-bubble').style.color = '';
+  } catch(e) {
+    td.querySelector('.text-bubble').textContent = '❌ Error: ' + e.message;
+    td.querySelector('.text-bubble').style.color = 'var(--rd)';
+  }
+
+  msgs.scrollTop = msgs.scrollHeight;
+  textBusy = false; document.getElementById('text-send').disabled = false;
+}
+
+// ── Utils ─────────────────────────────────────────────────
+function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function fmtText(t) {
+  t = t.replace(/```[\w]*\n?([\s\S]*?)```/g, (_,c)=>`<pre style="background:rgba(0,0,0,.3);padding:10px;border-radius:7px;font-size:12px;margin:6px 0;overflow-x:auto">${escHtml(c.trim())}</pre>`);
+  t = t.replace(/\*\*([^*]+)\*\*/g,'<strong style="color:var(--a3)">$1</strong>');
+  t = t.replace(/`([^`]+)`/g,'<code style="background:rgba(0,0,0,.3);padding:1px 5px;border-radius:4px;font-size:12px">$1</code>');
+  t = t.replace(/\n/g,'<br>');
+  return t;
+}
+</script>
+</body>
+</html>

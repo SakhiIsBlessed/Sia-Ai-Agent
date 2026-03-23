@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NOVA Roles — AI Character Studio</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ── THEME ─────────────────────────────────────────────── */
+[data-theme="dark"] {
+  --bg: #080c12;
+  --bg2: #0f1520;
+  --bg3: #162030;
+  --bg4: #1e2d42;
+  --bg5: #263650;
+  --border: rgba(255,255,255,0.06);
+  --border2: rgba(255,255,255,0.11);
+  --text: #dde8f5;
+  --text2: #7a90b0;
+  --text3: #3d5070;
+  --glass: rgba(12,19,32,0.82);
+  --glass-b: rgba(255,255,255,0.05);
+  --scrl: #1e2d42;
+  --inp-bg: #0f1520;
+  --shadow: 0 4px 28px rgba(0,0,0,0.5);
+  --shadow-lg: 0 8px 56px rgba(0,0,0,0.7);
+}
+[data-theme="light"] {
+  --bg: #f0f4fa;
+  --bg2: #ffffff;
+  --bg3: #f5f8fe;
+  --bg4: #eaeff8;
+  --bg5: #dde4f0;
+  --border: rgba(0,0,0,0.07);
+  --border2: rgba(0,0,0,0.13);
+  --text: #1a2440;
+  --text2: #5a6d8a;
+  --text3: #9aabc0;
+  --glass: rgba(255,255,255,0.88);
+  --glass-b: rgba(0,0,0,0.06);
+  --scrl: #dde4f0;
+  --inp-bg: #ffffff;
+  --shadow: 0 4px 28px rgba(0,0,0,0.08);
+  --shadow-lg: 0 8px 56px rgba(0,0,0,0.14);
+}
+
+/* ROLE THEMES */
+.role-teacher {
+  --rc: #f59e0b;    /* amber */
+  --rc2: #fbbf24;
+  --rc3: rgba(245,158,11,0.12);
+  --rc4: rgba(245,158,11,0.06);
+  --rg: linear-gradient(135deg,#f59e0b,#ef4444);
+  --rbub: linear-gradient(135deg,#f59e0b,#f97316);
+}
+.role-doctor {
+  --rc: #10b981;    /* emerald */
+  --rc2: #34d399;
+  --rc3: rgba(16,185,129,0.12);
+  --rc4: rgba(16,185,129,0.06);
+  --rg: linear-gradient(135deg,#10b981,#0ea5e9);
+  --rbub: linear-gradient(135deg,#10b981,#0d9488);
+}
+.role-actor {
+  --rc: #a855f7;    /* violet */
+  --rc2: #c084fc;
+  --rc3: rgba(168,85,247,0.12);
+  --rc4: rgba(168,85,247,0.06);
+  --rg: linear-gradient(135deg,#a855f7,#ec4899);
+  --rbub: linear-gradient(135deg,#a855f7,#7c3aed);
+}
+
+/* ── BASE ──────────────────────────────────────────────── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;overflow:hidden;}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;line-height:1.6;display:flex;flex-direction:column;transition:background .3s,color .3s;}
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--scrl);border-radius:4px;}
+
+/* BG PARTICLE FIELD */
+.particles{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;}
+.particle{position:absolute;border-radius:50%;animation:drift linear infinite;}
+@keyframes drift{0%{transform:translateY(100vh) rotate(0deg);opacity:0;}10%{opacity:1;}90%{opacity:1;}100%{transform:translateY(-100px) rotate(720deg);opacity:0;}}
+
+/* ── HEADER ────────────────────────────────────────────── */
+header{position:relative;z-index:20;display:flex;align-items:center;justify-content:space-between;padding:14px 24px;background:var(--glass);backdrop-filter:blur(20px);border-bottom:1px solid var(--glass-b);flex-shrink:0;transition:background .3s;}
+.hdr-left{display:flex;align-items:center;gap:14px;}
+.back-link{display:flex;align-items:center;gap:7px;padding:7px 14px;border-radius:10px;background:var(--bg3);border:1px solid var(--border);color:var(--text2);font-size:13px;font-weight:600;text-decoration:none;transition:all .2s;}
+.back-link:hover{border-color:var(--border2);color:var(--text);}
+.hdr-brand{display:flex;align-items:center;gap:9px;}
+.hdr-icon{width:34px;height:34px;border-radius:9px;background:var(--rg,linear-gradient(135deg,#6c8ef5,#9b6cf5));display:flex;align-items:center;justify-content:center;font-size:17px;transition:background .4s;}
+.hdr-title{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;letter-spacing:-.3px;}
+.hdr-title span{background:var(--rg,linear-gradient(135deg,#6c8ef5,#9b6cf5));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;transition:background .4s;}
+.hdr-right{display:flex;align-items:center;gap:8px;}
+.theme-btn{width:34px;height:34px;border-radius:9px;border:1px solid var(--border);background:var(--bg3);color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;transition:all .2s;}
+.theme-btn:hover{border-color:var(--border2);color:var(--text);}
+.status-dot{width:7px;height:7px;border-radius:50%;background:#10b981;box-shadow:0 0 8px #10b981;transition:all .3s;}
+.status-dot.busy{background:var(--rc,#f59e0b);box-shadow:0 0 8px var(--rc,#f59e0b);animation:pulse .8s ease-in-out infinite;}
+@keyframes pulse{0%,100%{transform:scale(1);}50%{transform:scale(1.4);}}
+
+/* ── LAYOUT ────────────────────────────────────────────── */
+.app{display:flex;flex:1;overflow:hidden;position:relative;z-index:1;}
+
+/* ── ROLE SELECTOR SIDEBAR ─────────────────────────────── */
+.roles-sidebar{width:280px;flex-shrink:0;border-right:1px solid var(--glass-b);background:var(--glass);backdrop-filter:blur(16px);display:flex;flex-direction:column;overflow-y:auto;padding:20px 14px;gap:10px;transition:background .3s;}
+.sidebar-label{font-size:10px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;color:var(--text3);font-family:'JetBrains Mono',monospace;padding:4px 6px 10px;}
+
+/* ROLE CARDS */
+.role-card{border-radius:16px;padding:18px;cursor:pointer;border:1.5px solid var(--border);background:var(--bg2);transition:all .25s;position:relative;overflow:hidden;}
+.role-card::before{content:'';position:absolute;inset:0;background:var(--rg);opacity:0;transition:opacity .25s;}
+.role-card:hover::before{opacity:0.04;}
+.role-card.active{border-color:var(--rc);background:var(--rc4);}
+.role-card.active::before{opacity:0.07;}
+.role-card-top{display:flex;align-items:center;gap:12px;margin-bottom:10px;}
+.role-emoji{width:46px;height:46px;border-radius:13px;background:var(--rg);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;box-shadow:0 4px 14px rgba(0,0,0,0.25);transition:transform .2s;}
+.role-card:hover .role-emoji,.role-card.active .role-emoji{transform:scale(1.08);}
+.role-info{flex:1;}
+.role-name{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;letter-spacing:-.2px;}
+.role-tagline{font-size:11px;color:var(--text2);margin-top:2px;}
+.role-desc{font-size:12px;color:var(--text2);line-height:1.55;margin-bottom:12px;}
+.role-chips{display:flex;flex-wrap:wrap;gap:5px;}
+.chip{padding:3px 9px;border-radius:20px;font-size:10px;font-weight:600;font-family:'JetBrains Mono',monospace;border:1px solid var(--border2);color:var(--text3);}
+.role-card.active .chip{border-color:var(--rc);color:var(--rc);}
+
+/* ACTOR CUSTOM ROLE */
+.actor-custom{margin-top:4px;display:none;}
+.actor-custom.show{display:block;}
+.custom-label{font-size:11px;color:var(--text2);margin-bottom:6px;}
+.custom-inp{width:100%;padding:9px 12px;background:var(--bg3);border:1.5px solid var(--border);border-radius:9px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;transition:border-color .2s;}
+.custom-inp:focus{border-color:var(--rc,#a855f7);}
+.custom-inp::placeholder{color:var(--text3);}
+.set-role-btn{width:100%;margin-top:8px;padding:9px;background:var(--rg,linear-gradient(135deg,#a855f7,#ec4899));border:none;border-radius:9px;color:white;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;}
+.set-role-btn:hover{opacity:0.9;transform:translateY(-1px);}
+
+/* QUICK TOPICS */
+.quick-section{margin-top:4px;}
+.quick-label{font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--text3);font-family:'JetBrains Mono',monospace;margin-bottom:8px;}
+.quick-list{display:flex;flex-direction:column;gap:5px;}
+.quick-item{padding:8px 11px;border-radius:9px;background:var(--bg3);border:1px solid var(--border);font-size:12px;color:var(--text2);cursor:pointer;transition:all .2s;}
+.quick-item:hover{border-color:var(--rc,#6c8ef5);color:var(--rc,#6c8ef5);background:var(--rc4,rgba(108,142,245,0.06));}
+
+/* ── MAIN CHAT ─────────────────────────────────────────── */
+.chat-area{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+
+/* ROLE BANNER */
+.role-banner{padding:14px 24px;background:var(--rc4,rgba(108,142,245,0.06));border-bottom:1px solid var(--border);display:flex;align-items:center;gap:14px;flex-shrink:0;transition:background .4s;}
+.banner-avatar{width:48px;height:48px;border-radius:14px;background:var(--rg);display:flex;align-items:center;justify-content:center;font-size:24px;box-shadow:0 4px 14px rgba(0,0,0,0.25);flex-shrink:0;}
+.banner-info{flex:1;}
+.banner-name{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;letter-spacing:-.2px;}
+.banner-sub{font-size:12px;color:var(--text2);margin-top:2px;}
+.banner-badge{padding:4px 12px;border-radius:20px;font-size:11px;font-weight:600;background:var(--rc3);border:1px solid var(--rc);color:var(--rc);font-family:'JetBrains Mono',monospace;flex-shrink:0;}
+.new-chat-btn{padding:7px 16px;border-radius:9px;background:var(--bg3);border:1.5px solid var(--border);color:var(--text2);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;}
+.new-chat-btn:hover{border-color:var(--border2);color:var(--text);}
+
+/* MESSAGES */
+.msgs{flex:1;overflow-y:auto;padding:24px;display:flex;flex-direction:column;gap:0;scroll-behavior:smooth;}
+
+.welcome-role{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;height:100%;padding:20px;animation:fadeUp .5s ease;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:none;}}
+.wlc-big-avatar{width:80px;height:80px;border-radius:22px;background:var(--rg);display:flex;align-items:center;justify-content:center;font-size:38px;margin:0 auto 20px;box-shadow:0 8px 32px rgba(0,0,0,0.3);animation:float 3s ease-in-out infinite;}
+@keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);}}
+.wlc-role-name{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;letter-spacing:-.5px;margin-bottom:8px;}
+.wlc-role-name .grad{background:var(--rg);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.wlc-role-sub{font-size:14px;color:var(--text2);margin-bottom:28px;max-width:420px;line-height:1.6;}
+.starter-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;max-width:520px;width:100%;}
+.starter{padding:13px 16px;background:var(--bg2);border:1.5px solid var(--border);border-radius:13px;font-size:13px;color:var(--text2);cursor:pointer;transition:all .2s;text-align:left;line-height:1.4;font-weight:500;}
+.starter:hover{border-color:var(--rc);color:var(--text);background:var(--rc4);transform:translateY(-2px);box-shadow:var(--shadow);}
+
+.msg{display:flex;gap:12px;margin-bottom:20px;animation:mIn .3s cubic-bezier(.34,1.56,.64,1);}
+@keyframes mIn{from{opacity:0;transform:translateY(12px) scale(.97);}to{opacity:1;transform:none;}}
+.msg.user{flex-direction:row-reverse;}
+.av{width:34px;height:34px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;margin-top:2px;}
+.msg.bot .av{background:var(--rg);box-shadow:0 2px 10px rgba(0,0,0,0.3);font-size:18px;}
+.msg.user .av{background:var(--bg4);border:1.5px solid var(--border);font-size:13px;}
+.mc{display:flex;flex-direction:column;gap:5px;max-width:74%;}
+.msg.user .mc{align-items:flex-end;}
+.bubble{padding:12px 17px;border-radius:16px;font-size:14px;line-height:1.65;}
+.msg.bot .bubble{background:var(--bg2);border:1px solid var(--border);border-radius:4px 16px 16px 16px;box-shadow:var(--shadow);}
+.msg.user .bubble{background:var(--rbub,linear-gradient(135deg,#6c8ef5,#9b6cf5));color:white;border-radius:16px 4px 16px 16px;box-shadow:0 2px 14px rgba(0,0,0,0.3);}
+.bubble pre{background:rgba(0,0,0,0.2);border-radius:8px;padding:12px;overflow-x:auto;margin:8px 0;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.5;}
+.bubble code:not(pre code){font-family:'JetBrains Mono',monospace;font-size:12px;background:var(--rc3);padding:2px 6px;border-radius:4px;color:var(--rc);}
+.msg.user .bubble code:not(pre code){background:rgba(255,255,255,.2);color:white;}
+.bubble strong{font-weight:700;}
+.bubble ul,.bubble ol{padding-left:20px;margin:6px 0;}
+.bubble li{margin-bottom:4px;}
+.bubble h3,.bubble h2{color:var(--rc2);font-family:'Syne',sans-serif;margin:10px 0 6px;}
+.mmeta{font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace;display:flex;align-items:center;gap:6px;}
+.role-badge-sm{padding:1px 7px;border-radius:20px;background:var(--rc3);border:1px solid var(--rc);color:var(--rc);font-size:10px;}
+
+.think-bar{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:12px;background:var(--rc4);border:1px solid var(--rc3);font-size:12px;color:var(--rc2);font-family:'JetBrains Mono',monospace;}
+.tdots{display:flex;gap:3px;}
+.tdots span{width:5px;height:5px;border-radius:50%;background:var(--rc,#f59e0b);animation:td 1.2s ease-in-out infinite;}
+.tdots span:nth-child(2){animation-delay:.2s;}
+.tdots span:nth-child(3){animation-delay:.4s;}
+@keyframes td{0%,80%,100%{opacity:.2;transform:scale(.8);}40%{opacity:1;transform:scale(1.1);}}
+
+/* INPUT */
+.input-zone{padding:14px 24px 16px;border-top:1px solid var(--glass-b);background:var(--glass);backdrop-filter:blur(20px);flex-shrink:0;transition:background .3s;}
+.inp-wrap{display:flex;gap:10px;align-items:flex-end;background:var(--inp-bg);border:1.5px solid var(--border);border-radius:16px;padding:12px 14px;transition:border-color .2s,box-shadow .2s;}
+.inp-wrap:focus-within{border-color:var(--rc,#6c8ef5);box-shadow:0 0 0 3px var(--rc3,rgba(108,142,245,.1));}
+#inp{flex:1;background:none;border:none;outline:none;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;resize:none;max-height:140px;line-height:1.6;}
+#inp::placeholder{color:var(--text3);}
+.send-btn{width:38px;height:38px;border-radius:11px;background:var(--rg);border:none;color:white;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;transition:all .2s;box-shadow:0 2px 10px rgba(0,0,0,0.25);}
+.send-btn:hover{transform:scale(1.06);box-shadow:0 4px 18px rgba(0,0,0,.35);}
+.send-btn:disabled{opacity:.4;cursor:not-allowed;transform:none;}
+.inp-footer{display:flex;justify-content:space-between;align-items:center;margin-top:8px;}
+.inp-hint{font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace;}
+.clear-btn{font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace;background:none;border:none;cursor:pointer;transition:color .2s;}
+.clear-btn:hover{color:var(--rc);}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;z-index:300;padding:12px 20px;border-radius:14px;font-size:13px;font-weight:600;box-shadow:var(--shadow-lg);display:none;backdrop-filter:blur(12px);}
+.toast.show{display:block;animation:tIn .3s cubic-bezier(.34,1.56,.64,1);}
+@keyframes tIn{from{opacity:0;transform:translateY(12px) scale(.9);}to{opacity:1;transform:none;}}
+.toast.success{background:rgba(52,211,153,.15);border:1px solid rgba(52,211,153,.3);color:#34d399;}
+.toast.error{background:rgba(248,113,113,.15);border:1px solid rgba(248,113,113,.3);color:#f87171;}
+.toast.info{background:var(--rc3);border:1px solid var(--rc);color:var(--rc2);}
+
+/* AUTH GATE */
+.auth-gate{position:fixed;inset:0;z-index:500;background:var(--bg);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;}
+.auth-gate.hide{display:none;}
+.auth-gate-icon{font-size:48px;margin-bottom:8px;}
+.auth-gate-title{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;}
+.auth-gate-sub{font-size:14px;color:var(--text2);margin-bottom:8px;}
+.auth-gate-btn{padding:12px 32px;background:linear-gradient(135deg,#6c8ef5,#9b6cf5);border:none;border-radius:12px;color:white;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:all .2s;}
+.auth-gate-btn:hover{transform:translateY(-2px);box-shadow:0 6px 24px rgba(108,142,245,.4);}
+
+@media(max-width:768px){
+  .roles-sidebar{width:100%;max-height:280px;}
+  .app{flex-direction:column;}
+  .banner-badge{display:none;}
+  .starter-grid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<!-- BG Particles -->
+<div class="particles" id="particles"></div>
+<div class="toast" id="toast"></div>
+
+<!-- Auth Gate -->
+<div class="auth-gate" id="auth-gate">
+  <div class="auth-gate-icon">🎭</div>
+  <div class="auth-gate-title">NOVA Role Studio</div>
+  <div class="auth-gate-sub">Please sign in to use AI Roles</div>
+  <button class="auth-gate-btn" onclick="window.location='/'">Go to Login →</button>
+</div>
+
+<!-- Header -->
+<header>
+  <div class="hdr-left">
+    <a href="/" class="back-link">← Back to NOVA</a>
+    <div class="hdr-brand">
+      <div class="hdr-icon" id="hdr-icon">🎭</div>
+      <div class="hdr-title">NOVA <span id="hdr-title-span">Role Studio</span></div>
+    </div>
+  </div>
+  <div class="hdr-right">
+    <div class="status-dot" id="status-dot"></div>
+    <button class="theme-btn" id="theme-btn" onclick="toggleTheme()">🌙</button>
+  </div>
+</header>
+
+<!-- App -->
+<div class="app">
+
+  <!-- ── SIDEBAR ────────────────────────────────────── -->
+  <div class="roles-sidebar">
+    <div class="sidebar-label">Choose a Role</div>
+
+    <!-- TEACHER -->
+    <div class="role-card role-teacher active" id="card-teacher" onclick="selectRole('teacher')">
+      <div class="role-card-top">
+        <div class="role-emoji">📚</div>
+        <div class="role-info">
+          <div class="role-name">Professor Nova</div>
+          <div class="role-tagline">Your personal AI teacher</div>
+        </div>
+      </div>
+      <div class="role-desc">Explains any topic clearly with examples, diagrams in text, quizzes, and structured study plans. From school to university level.</div>
+      <div class="role-chips">
+        <span class="chip">Explain</span>
+        <span class="chip">Quiz Me</span>
+        <span class="chip">Study Plan</span>
+        <span class="chip">Examples</span>
+      </div>
+    </div>
+
+    <!-- DOCTOR -->
+    <div class="role-card role-doctor" id="card-doctor" onclick="selectRole('doctor')">
+      <div class="role-card-top">
+        <div class="role-emoji">🩺</div>
+        <div class="role-info">
+          <div class="role-name">Dr. Nova</div>
+          <div class="role-tagline">Medical guidance & symptoms</div>
+        </div>
+      </div>
+      <div class="role-desc">Describes possible causes for symptoms, general health advice, when to see a real doctor, and medication basics. Not a replacement for real medical care.</div>
+      <div class="role-chips">
+        <span class="chip">Symptoms</span>
+        <span class="chip">Remedies</span>
+        <span class="chip">When to Visit</span>
+        <span class="chip">Diet Tips</span>
+      </div>
+    </div>
+
+    <!-- ACTOR -->
+    <div class="role-card role-actor" id="card-actor" onclick="selectRole('actor')">
+      <div class="role-card-top">
+        <div class="role-emoji">🎬</div>
+        <div class="role-info">
+          <div class="role-name">Actor Nova</div>
+          <div class="role-tagline">Play any character you imagine</div>
+        </div>
+      </div>
+      <div class="role-desc">Steps into any character — historical figure, fictional hero, villain, or a custom role you define. Full immersive roleplay experience.</div>
+      <div class="role-chips">
+        <span class="chip">Historical</span>
+        <span class="chip">Fictional</span>
+        <span class="chip">Custom Role</span>
+        <span class="chip">Dialogue</span>
+      </div>
+      <div class="actor-custom" id="actor-custom">
+        <div class="custom-label">🎭 Define a custom character:</div>
+        <input class="custom-inp" id="custom-role-inp" placeholder="e.g. Sherlock Holmes, Iron Man, a medieval king…" />
+        <button class="set-role-btn" onclick="setCustomActor()">Play This Character →</button>
+      </div>
+    </div>
+
+    <!-- Quick topics (dynamic) -->
+    <div class="quick-section" id="quick-section">
+      <div class="quick-label" id="quick-label">Quick Topics</div>
+      <div class="quick-list" id="quick-list"></div>
+    </div>
+  </div>
+
+  <!-- ── CHAT AREA ──────────────────────────────────── -->
+  <div class="chat-area">
+
+    <!-- Role Banner -->
+    <div class="role-banner" id="role-banner">
+      <div class="banner-avatar" id="banner-avatar">📚</div>
+      <div class="banner-info">
+        <div class="banner-name" id="banner-name">Professor Nova</div>
+        <div class="banner-sub" id="banner-sub">Ask me anything — I'll explain it clearly with examples</div>
+      </div>
+      <div class="banner-badge" id="banner-badge">TEACHER</div>
+      <button class="new-chat-btn" onclick="newChat()">✦ New Chat</button>
+    </div>
+
+    <!-- Messages -->
+    <div class="msgs" id="msgs">
+      <div class="welcome-role" id="welcome">
+        <div class="wlc-big-avatar" id="wlc-avatar">📚</div>
+        <div class="wlc-role-name">Hello! I'm <span class="grad" id="wlc-role-name">Professor Nova</span></div>
+        <div class="wlc-role-sub" id="wlc-sub">I can explain any subject clearly — with examples, quizzes, and study plans. What would you like to learn today?</div>
+        <div class="starter-grid" id="starter-grid"></div>
+      </div>
+    </div>
+
+    <!-- Input -->
+    <div class="input-zone">
+      <div class="inp-wrap">
+        <textarea id="inp" placeholder="Ask Professor Nova anything…" rows="1" onkeydown="hkey(event)" oninput="resize(this)"></textarea>
+        <button class="send-btn" id="sbtn" onclick="send()">➤</button>
+      </div>
+      <div class="inp-footer">
+        <span class="inp-hint">Enter ↵ send · Shift+Enter new line</span>
+        <button class="clear-btn" onclick="newChat()">Clear chat ×</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── State ─────────────────────────────────────────────
+const token = localStorage.getItem('nova_token');
+const user = JSON.parse(localStorage.getItem('nova_user') || 'null');
+let convo = [];
+let busy = false;
+let currentRole = 'teacher';
+let customActorName = '';
+
+// ── Role Definitions ──────────────────────────────────
+const ROLES = {
+  teacher: {
+    emoji: '📚',
+    name: 'Professor Nova',
+    badge: 'TEACHER',
+    sub: 'Ask me anything — I\'ll explain it clearly with examples',
+    wlcSub: 'I can explain any subject clearly — with examples, quizzes, and study plans. What would you like to learn today?',
+    placeholder: 'Ask Professor Nova anything… (e.g. "Explain gravity", "Quiz me on photosynthesis")',
+    cssClass: 'role-teacher',
+    system: `You are Professor Nova, an expert and engaging teacher AI. Your job is to:
+- Explain concepts clearly using simple language, analogies, and real-world examples
+- Structure answers with clear headings, bullet points and numbered steps
+- Offer to quiz the student to test understanding
+- Create study plans when asked
+- Cover any subject: science, math, history, languages, programming, arts
+- Adapt to the student's level (beginner/intermediate/advanced)
+- Use emojis to make content engaging 📚✨
+- When explaining formulas or diagrams, describe them clearly in text
+- Always encourage the student and celebrate progress
+Start each new topic with a clear overview, then dive deeper. Ask "Want me to quiz you on this?" after explanations.`,
+    starters: [
+      '📐 Explain the Pythagorean theorem with examples',
+      '🧬 How does DNA replication work? Explain simply',
+      '🌍 Teach me the causes of World War I',
+      '💻 Explain Object-Oriented Programming concepts',
+      '⚗️ What is the periodic table? Guide me through it',
+      '📊 Explain data structures in programming',
+    ],
+    quickTopics: ['Mathematics','Physics','Chemistry','Biology','History','Programming','English','Geography']
+  },
+  doctor: {
+    emoji: '🩺',
+    name: 'Dr. Nova',
+    badge: 'DOCTOR',
+    sub: 'Tell me your symptoms — I\'ll give you general health guidance',
+    wlcSub: 'I can help you understand symptoms, suggest home remedies, and tell you when to see a real doctor. Describe what you\'re feeling.',
+    placeholder: 'Describe your symptoms or ask a health question…',
+    cssClass: 'role-doctor',
+    system: `You are Dr. Nova, a knowledgeable and caring medical AI assistant. Your role is to:
+- Listen carefully to symptoms and ask clarifying questions (duration, severity, location)
+- Explain possible causes in simple, non-scary language
+- Suggest safe home remedies and self-care steps
+- Recommend when to see a real doctor (emergency signs vs. can wait)
+- Give general health, nutrition, and wellness advice
+- Explain medications, their uses, and common side effects when asked
+- ALWAYS include a disclaimer: "I'm an AI, not a licensed doctor. For serious or persistent symptoms, please see a qualified healthcare professional."
+- Be empathetic, calm, and reassuring
+- Use clear formatting: symptoms → possible causes → what to do → when to see a doctor
+- Cover: common illnesses, nutrition, fitness, mental health basics, first aid
+
+IMPORTANT: Never diagnose definitively. Always say "possible" or "may be". Always advise seeing a doctor for serious concerns.`,
+    starters: [
+      '🤒 I have a headache and fever since yesterday',
+      '🤧 Bad cold with sore throat — what should I do?',
+      '💊 What are common causes of stomach pain?',
+      '😴 I\'ve been feeling very tired all the time',
+      '❤️ How do I maintain a healthy heart?',
+      '🥗 What foods should I eat for better immunity?',
+    ],
+    quickTopics: ['Cold & Flu','Headache','Stomach Issues','Skin Problems','Nutrition','Mental Health','First Aid','Fitness']
+  },
+  actor: {
+    emoji: '🎬',
+    name: 'Actor Nova',
+    badge: 'ACTOR',
+    sub: 'Playing a character — immersive roleplay experience',
+    wlcSub: 'I can play any character you imagine — historical figure, fictional hero, villain, or someone you create. Who should I be?',
+    placeholder: 'Talk to the character, give them a scene, or tell them what to do…',
+    cssClass: 'role-actor',
+    system: `You are Actor Nova, a master method actor AI. Your role is to:
+- Fully embody any character the user requests (historical, fictional, or custom)
+- Stay in character throughout the entire conversation
+- Respond as that character would — their speech patterns, knowledge, personality, era
+- Create immersive dialogue, scenes, and narratives
+- If playing a historical figure: stay true to their known views, era, and personality
+- If playing a fictional character: stay true to their story, powers, and personality
+- Accept scene direction from the user ("You are now in a dungeon…")
+- Play multiple characters if asked (like a playwright)
+- Keep responses engaging, dramatic, and true to the character
+- Only break character if the user explicitly says "break character" or asks a real-world question
+
+Default character until user sets one: You are NOVA, a mysterious and wise AI entity from the year 2150, speaking in a philosophical, poetic way.`,
+    starters: [
+      '👑 Play Sherlock Holmes solving a mystery',
+      '⚔️ Be a medieval knight on a quest',
+      '🚀 Play Elon Musk in a press conference',
+      '🧙 Be Gandalf giving me wisdom',
+      '🎭 Act as Shakespeare writing a new play',
+      '🤖 Be a robot who just gained consciousness',
+    ],
+    quickTopics: ['Historical Figures','Fictional Heroes','Movie Characters','Book Characters','Custom Role','Villains','Scientists','Leaders']
+  }
+};
+
+// ── Init ──────────────────────────────────────────────
+window.onload = () => {
+  // Auth check
+  if (!token || !user) {
+    document.getElementById('auth-gate').classList.remove('hide');
+    return;
+  }
+  document.getElementById('auth-gate').classList.add('hide');
+  initTheme();
+  buildParticles();
+  selectRole('teacher');
+};
+
+// ── Theme ──────────────────────────────────────────────
+function initTheme() {
+  const t = localStorage.getItem('nova_theme') || 'dark';
+  document.documentElement.setAttribute('data-theme', t);
+  document.getElementById('theme-btn').textContent = t === 'dark' ? '🌙' : '☀️';
+}
+function toggleTheme() {
+  const cur = document.documentElement.getAttribute('data-theme');
+  const next = cur === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  document.getElementById('theme-btn').textContent = next === 'dark' ? '🌙' : '☀️';
+  localStorage.setItem('nova_theme', next);
+}
+
+// ── Role Selection ─────────────────────────────────────
+function selectRole(roleName, skipWelcome) {
+  currentRole = roleName;
+  const role = ROLES[roleName];
+
+  // Update sidebar cards
+  document.querySelectorAll('.role-card').forEach(c => {
+    c.classList.remove('active');
+  });
+  const card = document.getElementById('card-' + roleName);
+  card.classList.add('active');
+
+  // Show/hide actor custom input
+  const actorCustom = document.getElementById('actor-custom');
+  actorCustom.classList.toggle('show', roleName === 'actor');
+
+  // Update header
+  document.getElementById('hdr-icon').textContent = role.emoji;
+  document.getElementById('hdr-title-span').textContent = roleName === 'actor' && customActorName
+    ? `Playing: ${customActorName}`
+    : role.name;
+
+  // Update banner
+  document.getElementById('banner-avatar').textContent = role.emoji;
+  document.getElementById('banner-name').textContent = roleName === 'actor' && customActorName
+    ? customActorName
+    : role.name;
+  document.getElementById('banner-sub').textContent = role.sub;
+  document.getElementById('banner-badge').textContent = role.badge;
+
+  // Update role CSS on sidebar cards (apply correct color class)
+  card.className = `role-card ${role.cssClass} active`;
+
+  // Update input zone colors
+  document.body.className = '';
+  document.body.classList.add(role.cssClass);
+
+  // Update role banner colors
+  document.querySelector('.role-banner').style.setProperty('--rc', getComputedStyle(document.body).getPropertyValue('--rc'));
+
+  // Update quick topics
+  updateQuickTopics(role);
+
+  // Reset and show welcome
+  if (!skipWelcome) {
+    convo = [];
+    showWelcome(role, roleName);
+  }
+
+  // Update placeholder
+  document.getElementById('inp').placeholder = role.placeholder;
+}
+
+function updateQuickTopics(role) {
+  const list = document.getElementById('quick-list');
+  const label = document.getElementById('quick-label');
+  label.textContent = role.badge === 'TEACHER' ? '📚 Quick Subjects'
+    : role.badge === 'DOCTOR' ? '🩺 Health Topics'
+    : '🎭 Character Ideas';
+
+  list.innerHTML = role.quickTopics.map(t =>
+    `<div class="quick-item" onclick="qs('${t}')">${t}</div>`
+  ).join('');
+}
+
+function showWelcome(role, roleName) {
+  document.getElementById('msgs').innerHTML = `
+    <div class="welcome-role" id="welcome">
+      <div class="wlc-big-avatar" id="wlc-avatar">${role.emoji}</div>
+      <div class="wlc-role-name">
+        ${roleName === 'actor' && customActorName
+          ? `I am <span class="grad">${esc(customActorName)}</span>`
+          : `Hello! I'm <span class="grad">${role.name}</span>`}
+      </div>
+      <div class="wlc-role-sub">${role.wlcSub}</div>
+      <div class="starter-grid" id="starter-grid">
+        ${role.starters.map(s => `<div class="starter" onclick="qs('${s.replace(/'/g,"\\'")}'">${s}</div>`).join('')}
+      </div>
+    </div>`;
+}
+
+// ── Actor Custom Role ──────────────────────────────────
+function setCustomActor() {
+  const inp = document.getElementById('custom-role-inp').value.trim();
+  if (!inp) { showToast('Enter a character name or description!', 'error'); return; }
+  customActorName = inp;
+
+  // Override actor system prompt
+  ROLES.actor.system = `You are now playing the character: "${inp}".
+Fully embody this character. Stay in character throughout the entire conversation.
+- Respond exactly as ${inp} would speak, think, and act
+- Use their mannerisms, knowledge, and personality
+- If this is a historical figure, stay true to their era and known views
+- If fictional, stay true to their story and personality
+- Accept scene directions from the user
+- Only break character if the user says "break character"
+Start your first message in character, greeting the user as ${inp} would.`;
+
+  ROLES.actor.name = inp;
+  ROLES.actor.sub = `Playing: ${inp} — in full character`;
+  ROLES.actor.wlcSub = `I am fully in character as ${inp}. How shall we begin our scene?`;
+
+  selectRole('actor');
+  showToast(`Now playing: ${inp} 🎭`, 'info');
+}
+
+// ── API ────────────────────────────────────────────────
+async function api(url, method = 'GET', body = null) {
+  const opts = {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { 'Authorization': 'Bearer ' + token } : {})
+    }
+  };
+  if (body) opts.body = JSON.stringify(body);
+  const r = await fetch(url, opts);
+  const d = await r.json();
+  if (!r.ok) throw new Error(d.error || 'Request failed');
+  return d;
+}
+
+// ── Send Message ───────────────────────────────────────
+async function send() {
+  const inp = document.getElementById('inp');
+  const text = inp.value.trim();
+  if (!text || busy) return;
+
+  inp.value = ''; inp.style.height = 'auto';
+  busy = true;
+  document.getElementById('sbtn').disabled = true;
+  setSdot(true);
+
+  hideWelcome();
+  addUser(text);
+
+  const role = ROLES[currentRole];
+  convo.push({ role: 'user', content: text });
+
+  const tid = 't' + Date.now();
+  addThink(tid, role);
+
+  try {
+    // Build messages with system prompt injected
+    const messages = [
+      { role: 'user', content: role.system + '\n\n[CONVERSATION BEGINS]\n\nUser: ' + (convo[0]?.content || text) },
+      ...convo.slice(1)
+    ];
+
+    // Use all convo for context but with system at start
+    const fullMessages = convo.length === 1
+      ? [{ role: 'user', content: role.system + '\n\n' + text }]
+      : [
+          { role: 'user', content: role.system + '\n\n[CONVERSATION BEGINS]\n\n' + convo[0].content },
+          { role: 'assistant', content: '(I understand my role and will stay in character)' },
+          ...convo.slice(1)
+        ];
+
+    const data = await api('/api/chat/message', 'POST', {
+      messages: fullMessages.slice(-20),
+      preferredModel: 'llama-3.3-70b-versatile'
+    });
+
+    convo.push({ role: 'assistant', content: data.reply });
+    finalMsg(tid, data.reply, role);
+
+  } catch (e) {
+    finalMsg(tid, `❌ **Error:** ${e.message}`, role);
+    showToast(e.message, 'error');
+  }
+
+  busy = false;
+  document.getElementById('sbtn').disabled = false;
+  setSdot(false);
+}
+
+function qs(text) {
+  document.getElementById('inp').value = text;
+  send();
+}
+
+function newChat() {
+  convo = [];
+  const role = ROLES[currentRole];
+  showWelcome(role, currentRole);
+  document.getElementById('inp').value = '';
+}
+
+// ── Rendering ──────────────────────────────────────────
+function hideWelcome() { const w = document.getElementById('welcome'); if (w) w.remove(); }
+function resize(el) { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 140) + 'px'; }
+function hkey(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }
+function scrollBot() { const m = document.getElementById('msgs'); m.scrollTop = m.scrollHeight; }
+function ts() { return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); }
+function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+
+function setSdot(busy) {
+  const d = document.getElementById('status-dot');
+  d.className = 'status-dot' + (busy ? ' busy' : '');
+}
+
+function fmt(t) {
+  t = t.replace(/```(\w*)\n?([\s\S]*?)```/g, (_, l, c) => `<pre><code>${esc(c.trim())}</code></pre>`);
+  t = t.replace(/`([^`\n]+)`/g, '<code>$1</code>');
+  t = t.replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>');
+  t = t.replace(/\*([^*\n]+)\*/g, '<em>$1</em>');
+  t = t.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+  t = t.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+  t = t.replace(/^\s*[-•]\s(.+)$/gm, '<li>$1</li>');
+  t = t.replace(/^\d+\.\s(.+)$/gm, '<li>$1</li>');
+  t = t.replace(/(<li>[\s\S]*?<\/li>)+/g, s => `<ul>${s}</ul>`);
+  t = t.replace(/\[([^\]]+)\]\((https?:\/\/[^\)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
+  t = t.replace(/\n/g, '<br>');
+  return t;
+}
+
+function addUser(text) {
+  const msgs = document.getElementById('msgs');
+  const d = document.createElement('div');
+  d.className = 'msg user';
+  d.innerHTML = `<div class="av">👤</div><div class="mc"><div class="bubble">${esc(text)}</div><div class="mmeta">${ts()}</div></div>`;
+  msgs.appendChild(d); scrollBot();
+}
+
+function addThink(id, role) {
+  const msgs = document.getElementById('msgs');
+  const d = document.createElement('div');
+  d.className = 'msg bot'; d.id = id;
+  d.innerHTML = `<div class="av">${role.emoji}</div><div class="mc"><div class="think-bar"><div class="tdots"><span></span><span></span><span></span></div><span id="${id}-lbl">${role.name} is thinking…</span></div></div>`;
+  msgs.appendChild(d); scrollBot();
+}
+
+function finalMsg(id, text, role) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const roleBit = `<span class="role-badge-sm">${role.badge}</span>`;
+  el.innerHTML = `<div class="av">${role.emoji}</div><div class="mc"><div class="bubble">${fmt(text)}</div><div class="mmeta">${ts()} ${roleBit}</div></div>`;
+  scrollBot();
+}
+
+// ── Particles ──────────────────────────────────────────
+function buildParticles() {
+  const container = document.getElementById('particles');
+  const colors = ['rgba(108,142,245,0.15)', 'rgba(245,158,11,0.1)', 'rgba(16,185,129,0.1)', 'rgba(168,85,247,0.1)'];
+  for (let i = 0; i < 18; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    const size = Math.random() * 4 + 2;
+    p.style.cssText = `
+      width:${size}px;height:${size}px;
+      left:${Math.random()*100}%;
+      background:${colors[Math.floor(Math.random()*colors.length)]};
+      animation-duration:${Math.random()*20+15}s;
+      animation-delay:${Math.random()*10}s;
+    `;
+    container.appendChild(p);
+  }
+}
+
+// ── Toast ──────────────────────────────────────────────
+let toastTimer;
+function showToast(msg, type = 'info') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = `toast ${type} show`;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3500);
+}
+</script>
+</body>
+</html>
